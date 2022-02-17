@@ -23,13 +23,27 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
 
     // Info of each user.
     struct UserInfo {
-        uint256 amount; // How many LP tokens the user has provided.
-        uint256 rewardDebt; // Reward debt. See explanation below.
-        uint256 rewardDebtAtBlock; // the last block user stake
-        uint256 lastWithdrawBlock; // the last block a user withdrew at.
-        uint256 firstDepositBlock; // the last block a user deposited at.
-        uint256 blockdelta; //time passed since withdrawals
-        uint256 lastDepositBlock;
+        uint256 amount; // 用户提供了多少 LP 令牌
+        uint256 rewardDebt; // 奖励债务。即用户已经领取的奖励数包括解锁和未解锁的数量，解锁的直接到钱包中，未解锁的锁定到了Token合约中并标记了所属用户
+        uint256 rewardDebtAtBlock; // 最后一个区块用户权益，用户最近一次领取奖励的区块
+        uint256 lastWithdrawBlock; // 用户提现的最后一个区块.
+        uint256 firstDepositBlock; // 用户存入的第一个区块。
+        uint256 blockdelta; // 自提现后经过的时间
+        uint256 lastDepositBlock; //上一次存入的区块
+
+        /*
+
+        我们在这里做一些花哨的数学。 基本上，在任何时间点，授予用户但待分配的 JEWEL 数量为：
+        待定奖励 = (user.amount * pool.accGovTokenPerShare) - user.rewardDebt
+
+        每当用户将 LP 代币存入或提取到池中时。 这是发生的事情：
+        1. 池的`accGovTokenPerShare`（和`lastRewardBlock`）得到更新。
+        2. 用户收到发送到他/她地址的待定奖励。
+        3. 用户的“amount”得到更新。
+        4. 用户的`rewardDebt`得到更新。
+
+        */
+
         //
         // We do some fancy math here. Basically, at any point in time, the
         // amount of JEWEL
@@ -54,8 +68,10 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
     // Info of each pool.
     struct PoolInfo {
         IERC20 lpToken; // Address of LP token contract.
-        uint256 allocPoint; // How many allocation points assigned to this pool. JEWEL to distribute per block.
+        uint256 allocPoint; // 分配给该池的分配点数。 JEWEL 按块分配。
         uint256 lastRewardBlock; // Last block number that JEWEL distribution occurs.
+        // 每股累计宝石，乘以1e12。见下文
+        // 当前一个LP能兑换多少个JEWEL token
         uint256 accGovTokenPerShare; // Accumulated JEWEL per share, times 1e12. See below.
     }
 
@@ -75,19 +91,20 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
     uint256 public REWARD_PER_BLOCK;
     // Bonus multiplier for early JEWEL makers.
     uint256[] public REWARD_MULTIPLIER; // init in constructor function
-    uint256[] public HALVING_AT_BLOCK; // init in constructor function
+    // 减半block halving
+    uint256[] public HALVING_AT_BLOCK; // init in constructor function 当前102
     uint256[] public blockDeltaStartStage;
     uint256[] public blockDeltaEndStage;
-    uint256[] public userFeeStage;
-    uint256[] public devFeeStage;
-    uint256 public FINISH_BONUS_AT_BLOCK;
+    uint256[] public userFeeStage; // [0~7] 用户提前提现手续费率 从 0.01% 到 25%
+    uint256[] public devFeeStage; // [0-7]; 提现是给开发者的手续费
+    uint256 public FINISH_BONUS_AT_BLOCK; // 结束区块
     uint256 public userDepFee;
     uint256 public devDepFee;
 
     // The block number when JEWEL mining starts.
-    uint256 public START_BLOCK;
+    uint256 public START_BLOCK; // 开始区块
 
-    uint256[] public PERCENT_LOCK_BONUS_REWARD; // lock xx% of bounus reward
+    uint256[] public PERCENT_LOCK_BONUS_REWARD; // lock xx% of bounus reward 当前index36+以上都是4
     uint256 public PERCENT_FOR_DEV; // dev bounties
     uint256 public PERCENT_FOR_LP; // LP fund
     uint256 public PERCENT_FOR_COM; // community fund
@@ -95,12 +112,19 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
+
+    // poolId1 从 1 开始，与 poolInfo 一起使用前减去 1
+    // LP池子ID，JEWEL/ONE_id=1
     mapping(address => uint256) public poolId1; // poolId1 starting from 1, subtract 1 before using with poolInfo
+
+    // 每个持有 LP 代币的用户的信息。pid => user address => info
     // Info of each user that stakes LP tokens. pid => user address => info
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
+
     mapping(address => UserGlobalInfo) public userGlobalInfo;
     mapping(IERC20 => bool) public poolExistence;
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
+    // 总分配额。必须是所有池中所有分配点的总和
     uint256 public totalAllocPoint = 0;
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
@@ -192,6 +216,7 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
     }
 
     // Update the given pool's JEWEL allocation points. Can only be called by the owner.
+    // 更新给定池的 JEWEL 分配点数
     function set(uint256 _pid, uint256 _allocPoint, bool _withUpdate) public onlyOwner {
         if (_withUpdate) {
             massUpdatePools();
@@ -234,7 +259,10 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
             GovTokenForFounders
         ) = getPoolReward(pool.lastRewardBlock, block.number, pool.allocPoint);
         // Mint some new JEWEL tokens for the farmer and store them in MasterGardener.
+        // 为农场主铸造一些新的JEWEL令牌，并将它们存储在MasterGardener中
         govToken.mint(address(this), GovTokenForFarmer);
+        // pool.accGovTokenPerShare  = pool.accGovTokenPerShare + (GovTokenForFarmer * 1e12 /lpSupply)
+        // 当前一个LP能兑换多少个JEWEL token
         pool.accGovTokenPerShare = pool.accGovTokenPerShare.add(
             GovTokenForFarmer.mul(1e12).div(lpSupply)
         );
@@ -242,6 +270,8 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
         if (GovTokenForDev > 0) {
             govToken.mint(address(devaddr), GovTokenForDev);
             //Dev fund has xx% locked during the starting bonus period. After which locked funds drip out linearly each block over 3 years.
+            // 开发基金在初始奖金期间锁定了xx%。之后，锁定的资金在3年内线性滴出每个区块。
+
             if (block.number <= FINISH_BONUS_AT_BLOCK) {
                 govToken.lock(address(devaddr), GovTokenForDev.mul(75).div(100));
             }
@@ -249,6 +279,7 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
         if (GovTokenForLP > 0) {
             govToken.mint(liquidityaddr, GovTokenForLP);
             //LP + Partnership fund has only xx% locked over time as most of it is needed early on for incentives and listings. The locked amount will drip out linearly each block after the bonus period.
+            // LP + Partnership基金随着时间的推移只有xx%锁定，因为其中大部分资金在早期就需要用于激励和上市。锁定金额将在奖金期后线性滴出每个区块。
             if (block.number <= FINISH_BONUS_AT_BLOCK) {
                 govToken.lock(address(liquidityaddr), GovTokenForLP.mul(45).div(100));
             }
@@ -256,6 +287,7 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
         if (GovTokenForCom > 0) {
             govToken.mint(comfundaddr, GovTokenForCom);
             //Community Fund has xx% locked during bonus period and then drips out linearly.
+            // 社区基金在奖金期间锁定了xx%，然后线性滴出。
             if (block.number <= FINISH_BONUS_AT_BLOCK) {
                 govToken.lock(address(comfundaddr), GovTokenForCom.mul(85).div(100));
             }
@@ -263,6 +295,7 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
         if (GovTokenForFounders > 0) {
             govToken.mint(founderaddr, GovTokenForFounders);
             //The Founders reward has xx% of their funds locked during the bonus period which then drip out linearly.
+            // 创始人奖励在奖金期间锁定了xx%的资金，然后线性滴出。
             if (block.number <= FINISH_BONUS_AT_BLOCK) {
                 govToken.lock(address(founderaddr), GovTokenForFounders.mul(95).div(100));
             }
@@ -295,15 +328,17 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
         return result;
     }
 
+    // 获取当前锁定百分比
     function getLockPercentage(uint256 _from, uint256 _to) public view returns (uint256) {
         uint256 result = 0;
         if (_from < START_BLOCK) return 100;
-
+        // HALVING_AT_BLOCK max  index 103
         for (uint256 i = 0; i < HALVING_AT_BLOCK.length; i++) {
             uint256 endBlock = HALVING_AT_BLOCK[i];
             if (i > PERCENT_LOCK_BONUS_REWARD.length-1) return 0;
 
             if (_to <= endBlock) {
+                //PERCENT_LOCK_BONUS_REWARD max index 47
                 return PERCENT_LOCK_BONUS_REWARD[i];
             }
         }
@@ -327,15 +362,19 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
         )
     {
         uint256 multiplier = getMultiplier(_from, _to);
+
+        // 获取块奖励数量
         uint256 amount =
             multiplier.mul(REWARD_PER_BLOCK).mul(_allocPoint).div(
                 totalAllocPoint
             );
+        // 计算还可以挖矿的JEWEL币的数量
         uint256 GovernanceTokenCanMint = govToken.cap().sub(govToken.totalSupply());
-
+        // 如果剩余可挖的数据小于块奖励的数量
         if (GovernanceTokenCanMint < amount) {
             // If there aren't enough governance tokens left to mint before the cap,
             // just give all of the possible tokens left to the farmer.
+            // 如果在上限之前没有足够的治理代币可供铸造，只需将所有可能的代币留给农民即可。
             forDev = 0;
             forFarmer = GovernanceTokenCanMint;
             forLP = 0;
@@ -353,9 +392,12 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
     }
 
     // View function to see pending JEWEL on frontend.
+    // 查询用户在某个池子的获取的奖励（从当前块到上一次奖励的块），通过 getLockPercentage(block.number-1,block.number) 可以获取当前锁定的百分比
+    // 从而可以计算出用户奖励的锁定和解锁的token数量
     function pendingReward(uint256 _pid, address _user) external view returns (uint256) {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][_user];
+        // 获取池子占比
         uint256 accGovTokenPerShare = pool.accGovTokenPerShare;
         uint256 lpSupply = pool.lpToken.balanceOf(address(this));
         if (block.number > pool.lastRewardBlock && lpSupply > 0) {
@@ -365,25 +407,30 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
                 block.number,
                 pool.allocPoint
             );
+            // 计算当前一个LP值多少挖出的JEWEL，相当于 1LP = accGovTokenPerShare JEWEL
             accGovTokenPerShare = accGovTokenPerShare.add(
                 GovTokenForFarmer.mul(1e12).div(lpSupply)
             );
         }
+        // 更具自己质押的计算自己收益
         return user.amount.mul(accGovTokenPerShare).div(1e12).sub(user.rewardDebt);
     }
 
+    // 收取多个池子的奖励，已解锁的部分
     function claimRewards(uint256[] memory _pids) public {
         for (uint256 i = 0; i < _pids.length; i++) {
           claimReward(_pids[i]);
         }
     }
 
+    // 收取奖励一个池子的奖励
     function claimReward(uint256 _pid) public {
         updatePool(_pid);
         _harvest(_pid);
     }
 
     // lock a % of reward if it comes from bonus time.
+    // 锁定奖励的百分比（如果它来自奖励时间）
     function _harvest(uint256 _pid) internal {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -393,7 +440,8 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
             // Calculate the pending reward. This is the user's amount of LP
             // tokens multiplied by the accGovTokenPerShare of the pool, minus
             // the user's rewardDebt.
-            uint256 pending =
+            // pending = user.amount * pool.accGovTokenPerShare/(1e12) - user.rewardDebt
+            uint256 pending = 
                 user.amount.mul(pool.accGovTokenPerShare).div(1e12).sub(
                     user.rewardDebt
                 );
@@ -409,6 +457,9 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
             if (pending > 0) {
                 // If the user has a positive pending balance of tokens, transfer
                 // those tokens from MasterGardener to their wallet.
+                // 如果用户有正的待处理token余额，请将这些token从MasterGardener转移到他们的钱包
+
+                // function transfer ( address recipient, uint256 amount ) external returns ( bool );
                 govToken.transfer(msg.sender, pending);
                 uint256 lockAmount = 0;
                 if (user.rewardDebtAtBlock <= FINISH_BONUS_AT_BLOCK) {
@@ -453,6 +504,10 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
     }
 
     // Deposit LP tokens to MasterGardener for JEWEL allocation.
+    // 存入LP token
+    // pid = poolid 从1开始，但是下标从 0 开始
+    // 指定poolId存入LP
+    // JEWEL/ONE_token =  LP, id 为1-1 = 0
     function deposit(uint256 _pid, uint256 _amount, address _ref) public nonReentrant {
         require(
             _amount > 0,
@@ -461,6 +516,7 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
 
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
+        // devaddr: dev address
         UserInfo storage devr = userInfo[_pid][devaddr];
         UserGlobalInfo storage refer = userGlobalInfo[_ref];
         UserGlobalInfo storage current = userGlobalInfo[msg.sender];
@@ -473,30 +529,38 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
             refer.totalReferals = refer.totalReferals + 1;
             refer.globalRefAmount = refer.globalRefAmount + _amount;
         }
-
+        // userDepFee 用户调试费
         current.globalAmount =
             current.globalAmount +
             _amount.mul(userDepFee).div(100);
 
         // When a user deposits, we need to update the pool and harvest beforehand,
         // since the rates will change.
+        // 当用户存款时，我们需要事先更新池并收获，因为费率会发生变化。即将之情的收益结算一下
         updatePool(_pid);
         _harvest(_pid);
+
+        // 向此合约转账LP，保存用户的LP
         pool.lpToken.safeTransferFrom(
             address(msg.sender),
             address(this),
             _amount
         );
         if (user.amount == 0) {
+            // 如果是第一次存入则记录用户存入是的block number
             user.rewardDebtAtBlock = block.number;
         }
+
+        // 减去用户的调试费就是此次存入的真实LP数量
         user.amount = user.amount.add(
             _amount.sub(_amount.mul(userDepFee).div(10000))
         );
+        // user.rewardDebt =  user.amount * pool.accGovTokenPerShare / 1e12
         user.rewardDebt = user.amount.mul(pool.accGovTokenPerShare).div(1e12);
         devr.amount = devr.amount.add(
             _amount.sub(_amount.mul(devDepFee).div(10000))
         );
+        // devr.rewardDebt =  devr.amount * pool.accGovTokenPerShare / 1e12
         devr.rewardDebt = devr.amount.mul(pool.accGovTokenPerShare).div(1e12);
         emit Deposit(msg.sender, _pid, _amount);
         if (user.firstDepositBlock > 0) {} else {
@@ -506,6 +570,7 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
     }
 
     // Withdraw LP tokens from MasterGardener.
+    // 提现LP token
     function withdraw(uint256 _pid, uint256 _amount, address _ref) public nonReentrant {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -517,10 +582,10 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
             refer.globalRefAmount = refer.globalRefAmount - _amount;
         }
         current.globalAmount = current.globalAmount - _amount;
-
+        // 结算收益
         updatePool(_pid);
         _harvest(_pid);
-
+        // 开始提现，根据相应条件来收取手续费
         if (_amount > 0) {
             user.amount = user.amount.sub(_amount);
             if (user.lastWithdrawBlock > 0) {
@@ -637,6 +702,7 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY. This has the same 25% fee as same block withdrawals to prevent abuse of thisfunction.
+    // 紧急提现，扣取25%的罚金
     function emergencyWithdraw(uint256 _pid) public nonReentrant {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -732,6 +798,7 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
         START_BLOCK = _newstarblock;
     }
 
+    // 获取一个block最新的奖励
     function getNewRewardPerBlock(uint256 pid1) public view returns (uint256) {
         uint256 multiplier = getMultiplier(block.number - 1, block.number);
         if (pid1 == 0) {
@@ -744,7 +811,7 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
                     .div(totalAllocPoint);
         }
     }
-
+    // 获取用户上次提现后的块之后的块
     function userDelta(uint256 _pid) public view returns (uint256) {
         UserInfo storage user = userInfo[_pid][msg.sender];
         if (user.lastWithdrawBlock > 0) {
@@ -756,11 +823,13 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
         }
     }
 
+    // 修正提现块
     function reviseWithdraw(uint256 _pid, address _user, uint256 _block) public onlyAuthorized() {
         UserInfo storage user = userInfo[_pid][_user];
         user.lastWithdrawBlock = _block;
     }
 
+    // 修正存入块
     function reviseDeposit(uint256 _pid, address _user, uint256 _block) public onlyAuthorized() {
         UserInfo storage user = userInfo[_pid][_user];
         user.firstDepositBlock = _block;

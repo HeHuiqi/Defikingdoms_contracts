@@ -837,7 +837,7 @@
 		"remappings": []
 	},
 	"sources": {
-		"@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol": {
+		".deps/npm/@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol": {
 			"keccak256": "0x2ffe9655abbb3741fcb84ad10e2f628d5dbec46b3f84a69ceec4752e807e2757",
 			"license": "MIT",
 			"urls": [
@@ -845,7 +845,7 @@
 				"dweb:/ipfs/QmUHqKecpxpa54uMAZ2sAnkxQf7JEL7UY4x9Kc7fF3CS62"
 			]
 		},
-		"@openzeppelin/contracts-upgradeable/access/IAccessControlUpgradeable.sol": {
+		".deps/npm/@openzeppelin/contracts-upgradeable/access/IAccessControlUpgradeable.sol": {
 			"keccak256": "0xb8f5302f12138c5561362e88a78d061573e6298b7a1a5afe84a1e2c8d4d5aeaa",
 			"license": "MIT",
 			"urls": [
@@ -853,7 +853,7 @@
 				"dweb:/ipfs/QmTQxFdfxcaueQa23VX34wAPqzruZbkzyeN58tZK2yav2b"
 			]
 		},
-		"@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol": {
+		".deps/npm/@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol": {
 			"keccak256": "0x372b0bc04e3b4c074559bbbfb1317afddb56de5504158ca25a7f9cd403980445",
 			"license": "MIT",
 			"urls": [
@@ -861,7 +861,7 @@
 				"dweb:/ipfs/QmTsLrMYzPjnB85pyAy85NNcBg64RPVueJARzwNg9xMyR1"
 			]
 		},
-		"@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol": {
+		".deps/npm/@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol": {
 			"keccak256": "0x55cf2bd9fc76704ddcdc19834cd288b7de00fc0f298a40ea16a954ae8991db2d",
 			"license": "MIT",
 			"urls": [
@@ -869,7 +869,7 @@
 				"dweb:/ipfs/QmQ9vsG3o4wED3FRogiSUhdzJvZSjjYFtydzXvFEJtgZk4"
 			]
 		},
-		"@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol": {
+		".deps/npm/@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol": {
 			"keccak256": "0x963ea7f0b48b032eef72fe3a7582edf78408d6f834115b9feadd673a4d5bd149",
 			"license": "MIT",
 			"urls": [
@@ -877,7 +877,7 @@
 				"dweb:/ipfs/QmWZ4rAKTQbNG2HxGs46AcTXShsVytKeLs7CUCdCSv5N7a"
 			]
 		},
-		"@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol": {
+		".deps/npm/@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol": {
 			"keccak256": "0x398d3323c1932a5986bf36be7c57593e121e69d5db5b6574b4ee0d031443de37",
 			"license": "MIT",
 			"urls": [
@@ -885,7 +885,7 @@
 				"dweb:/ipfs/QmNYy2sc2RoTjDhyT6HAibmeDGqfhDiDpsWRbHFHoGVHLr"
 			]
 		},
-		"@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol": {
+		".deps/npm/@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol": {
 			"keccak256": "0x9a3b990bd56d139df3e454a9edf1c64668530b5a77fc32eb063bc206f958274a",
 			"license": "MIT",
 			"urls": [
@@ -893,7 +893,7 @@
 				"dweb:/ipfs/QmUM1VH3XDk559Dsgh4QPvupr3YVKjz87HrSyYzzVFZbxw"
 			]
 		},
-		"@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol": {
+		".deps/npm/@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeable.sol": {
 			"keccak256": "0xc6cef87559d0aeffdf0a99803de655938a7779ec0a3cd5d4383483ad85565a09",
 			"license": "MIT",
 			"urls": [
@@ -902,11 +902,11 @@
 			]
 		},
 		"contracts/Profiles.sol": {
-			"keccak256": "0xb366f57cb076a54e1faceefcccddce455a4252f744e28e1a4a7190e1b427c381",
+			"keccak256": "0x2618c1b271a308e04eadce36f5e77c489354ceeff566a9f2e6e2c7fe275c7ad8",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://4bcabaae8b88ef7404faaf975590cf1046a4ab428d964629092bd476392c53b1",
-				"dweb:/ipfs/QmY6bULtMmyQ9uCoLxHTn4qRk4fALt5AdpnzCWbtQGD2Uy"
+				"bzz-raw://7e4198fdd4c7dc7d7eaefe6a8c08ab8c2e06816f98a7e7b98013eca2280b861e",
+				"dweb:/ipfs/QmRPrwkEaCv1jciTWSPDiXQYRNWewD9jfU5mPwnFQRWYRQ"
 			]
 		}
 	},

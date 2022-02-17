@@ -4,10 +4,6 @@
 npm i @openzeppelin/contracts@3.4 
 npm install @openzeppelin/contracts-upgradeable
 
-or
-
-npm install
-
 ```
 
 

@@ -17,6 +17,7 @@ library UniswapV2Library {
     }
 
     // calculates the CREATE2 address for a pair without making any external calls
+    // 计算一对的 CREATE2 地址，而不进行任何外部调用
     function pairFor(address factory, address tokenA, address tokenB) internal pure returns (address pair) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         pair = address(uint(keccak256(abi.encodePacked(

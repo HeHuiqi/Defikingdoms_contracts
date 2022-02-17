@@ -19,7 +19,7 @@ contract JewelToken is ERC20, Ownable, Authorizable {
     uint256 public lockToBlock;
     uint256 public manualMintLimit;
     uint256 public manualMinted = 0;
-    address public miner;
+    address public miner; // 铸造token地址
     IProfiles public profilesContract;
     uint64 public profileAgeReq = 0;
 
@@ -28,9 +28,11 @@ contract JewelToken is ERC20, Ownable, Authorizable {
 
     // Max transfer amount rate in basis points. Default is 100% of total
     // supply, and it can't be less than 0.5% of the supply.
+    // 最大转账金额利率（以基点为单位）。默认值为总供应量的 100%，不能低于总供应量的 0.5%。
     uint16 public maxTransferAmountRate = 10000;
 
     // Addresses that are excluded from anti-whale checking.
+    // 从反鲸鱼检查中排除的地址。
     mapping(address => bool) private _excludedFromAntiWhale;
 
     // Events.
@@ -42,6 +44,7 @@ contract JewelToken is ERC20, Ownable, Authorizable {
 
     /**
      * @dev Ensures that the anti-whale rules are enforced.
+     *  确保执行反鲸鱼规则 防止大额转账破环市场
      */
     modifier antiWhale(address sender, address recipient, uint256 amount) {
         if (maxTransferAmount() > 0) {
@@ -92,6 +95,7 @@ contract JewelToken is ERC20, Ownable, Authorizable {
 
     /**
      * @dev Returns the cap on the token's total supply.
+     * 返回令牌总供应量的上限
      */
     function cap() public view returns (uint256) {
         return _cap;
@@ -100,6 +104,7 @@ contract JewelToken is ERC20, Ownable, Authorizable {
     /**
      * @dev Updates the total cap.
      */
+     // 更新总量上限
     function capUpdate(uint256 _newCap) public onlyAuthorized {
         _cap = _newCap;
     }
@@ -133,18 +138,21 @@ contract JewelToken is ERC20, Ownable, Authorizable {
         lockToBlock = _newLockTo;
     }
 
+    // 已解锁的量
     function unlockedSupply() public view returns (uint256) {
         return totalSupply().sub(_totalLock);
     }
 
+    // 总锁定量
     function lockedSupply() public view returns (uint256) {
         return totalLock();
     }
-
+    // 流通量
     function circulatingSupply() public view returns (uint256) {
         return totalSupply();
     }
 
+    // 总锁定量
     function totalLock() public view returns (uint256) {
         return _totalLock;
     }
@@ -155,6 +163,7 @@ contract JewelToken is ERC20, Ownable, Authorizable {
      * Requirements:
      *
      * - minted tokens must not cause the total supply to go over the cap.
+     * 铸造的代币不得导致总供应量超过上限。
      */
     function _beforeTokenTransfer(
         address from,
@@ -210,18 +219,22 @@ contract JewelToken is ERC20, Ownable, Authorizable {
         manualMinted = manualMinted.add(_amount);
     }
 
+    // 用户总的余额
     function totalBalanceOf(address _holder) public view returns (uint256) {
         return _locks[_holder].add(balanceOf(_holder));
     }
 
+    // 用户总的锁定量
     function lockOf(address _holder) public view returns (uint256) {
         return _locks[_holder];
     }
 
+    // 上次解锁的块
     function lastUnlockBlock(address _holder) public view returns (uint256) {
         return _lastUnlockBlock[_holder];
     }
 
+    // 锁定用户一定数量的token
     function lock(address _holder, uint256 _amount) public onlyAuthorized {
         require(_holder != address(0), "Cannot lock to the zero address");
         require(
@@ -238,13 +251,21 @@ contract JewelToken is ERC20, Ownable, Authorizable {
         }
         emit Lock(_holder, _amount);
     }
-
+    // 用户可以解锁的数量
     function canUnlockAmount(address _holder) public view returns (uint256) {
         if (block.number < lockFromBlock) {
             return 0;
         } else if (block.number >= lockToBlock) {
             return _locks[_holder];
         } else {
+            /*
+
+            uint256 releaseBlock = block.number - _lastUnlockBlock[_holder]; // 释放的新块
+            uint256 numberLockBlock = lockToBlock - _lastUnlockBlock[_holder]; // 还有多少未释放的块
+            uint256 rate  = releaseBlock*(1e12)/numberLockBlock
+            return _locks[_holder]* rate/(1e12)
+            
+             */
             uint256 releaseBlock = block.number.sub(_lastUnlockBlock[_holder]);
             uint256 numberLockBlock =
                 lockToBlock.sub(_lastUnlockBlock[_holder]);
@@ -263,7 +284,7 @@ contract JewelToken is ERC20, Ownable, Authorizable {
         // Now that that's done, we can unlock the extra amount passed in.
         _unlock(account, amount);
     }
-
+    // 解锁用户锁定的token数量
     function unlock() public {
         uint256 amount = canUnlockAmount(msg.sender);
         _unlock(msg.sender, amount);
@@ -281,15 +302,21 @@ contract JewelToken is ERC20, Ownable, Authorizable {
         if (amount > balanceOf(address(this))) {
             amount = balanceOf(address(this));
         }
+        // function _transfer(address sender,address recipient,uint256 amount) 
+        // 向用户转账解锁的数量
         _transfer(address(this), holder, amount);
+        // 减少用户锁定的数量
         _locks[holder] = _locks[holder].sub(amount);
+        // 记录解锁的块
         _lastUnlockBlock[holder] = block.number;
+        // 减少总的锁定量
         _totalLock = _totalLock.sub(amount);
 
         emit Unlock(holder, amount);
     }
 
     // This function is for dev address migrate all balance to a multi sig address
+    // 此功能用于开发人员地址将所有余额迁移到多签名地址
     function transferAll(address _to) public {
         _locks[_to] = _locks[_to].add(_locks[msg.sender]);
 
@@ -569,7 +596,9 @@ contract JewelToken is ERC20, Ownable, Authorizable {
      * @dev Update the max transfer amount rate.
      */
     function updateMaxTransferAmountRate(uint16 _maxTransferAmountRate) public onlyAuthorized {
+        // 最大转账金额比例不得超过最大速率
         require(_maxTransferAmountRate <= 10000, "updateMaxTransferAmountRate: Max transfer amount rate must not exceed the maximum rate.");
+        // 最大转账金额比例必须大于0.005
         require(_maxTransferAmountRate >= 50, "updateMaxTransferAmountRate: Max transfer amount rate must be more than 0.005.");
         emit MaxTransferAmountRateUpdated(maxTransferAmountRate, _maxTransferAmountRate);
         maxTransferAmountRate = _maxTransferAmountRate;

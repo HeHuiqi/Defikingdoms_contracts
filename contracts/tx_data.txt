@@ -1,0 +1,37 @@
+// 创建角色 月色
+https://explorer.harmony.one/tx/0x903736f3485faa4de6303e96a2bb686c7d57e65f53fc932960dfb91a30b76909
+
+在Market 的 Trade 中 执行 swapExactETHForTokens()（one/jewel） Router合约 one1yjkky5pdr3jje3mggzq3d8gy394vyresl69pgt
+https://explorer.harmony.one/tx/0x54a4ef3dde1ccceccc8cf81a61e71bd20d578308707e932756194c6a6fbea6ed
+
+
+在Market 的 Rurid 中 执行 addLiquidityETH()（one/jewel）Router合约 one1yjkky5pdr3jje3mggzq3d8gy394vyresl69pgt
+https://explorer.harmony.one/tx/0x7140b7d5520f85ed4607fee7aaf0d3e668be821a22e417c1819ca0c4dd7a3a9f
+
+批准 LP 执行pair合约的approve 给 MasterGardener 合约授权 one1mvcxg0r34j0zzgk2qdq76a7sn40en7fy7lytq4
+https://explorer.harmony.one/tx/0xc1b18e05cac9160735e2f6b2e1fc3ecaecc90134f858fa4867284728f5c37f20
+
+
+在Gardents存入LP 执行deposit()（one/jewel）MasterGardener 合约 one1mvcxg0r34j0zzgk2qdq76a7sn40en7fy7lytq4
+https://explorer.harmony.one/tx/0x9309ad93870e96b64493594f0af4510f49d2a412e6f9e8cdc602866075c9868e
+
+// 领取质押奖励
+https://explorer.harmony.one/tx/0x0fc687d0714e4789f7e6f2b56c4397f44ee7c25798dac0b0761b44d3654f4886
+
+
+
+// 领取银行利息
+https://explorer.harmony.one/tx/0x0678ce12a7e59f9a59943ed359c852a6b9b9bb0533405ea31763d6f0a5e12f45
+
+JEWEL/ONE_LP
+bech32Address: one1adtemhx5nfa7k0eqtj0lvqrtkcus7yu0nk2y90
+address: 0xeb579ddcd49a7beb3f205c9ff6006bb6390f138f 
+PoolId: 1
+
+0xEb579ddcD49A7beb3f205c9fF6006Bb6390F138f,
+568,22954723,
+29715629918360,
+0xEb579ddcD49A7beb3f205c9fF6006Bb6390F138f,
+568,22954723,29715629918360
+
+

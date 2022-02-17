@@ -1635,19 +1635,19 @@
 			]
 		},
 		"contracts/JewelToken.sol": {
-			"keccak256": "0x349addcdb774c1fc0868d0fe2016cc4dfc78cbcf80607425cd01091849570088",
+			"keccak256": "0xaa4af37ed1999f805018a79aeb427527fc4f90bc1d4fe9b926dbc6600e8a653d",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://4513325bc62938bee6d03f27ed66f4de4c17059ae6cbf1ab0b5640682fb5e969",
-				"dweb:/ipfs/QmNfMyCDZMBkYGFUW9mc6qEekXmWPJPDG7dQNfTrYiovsL"
+				"bzz-raw://3819108e4cafb5009bccbc7c404d1b912a70410e3a8522352b5637a8070450bc",
+				"dweb:/ipfs/QmW9AqCsKxVtTvervzt5ZnLQ7sUwEjFfdLJZoVDJoDGoeT"
 			]
 		},
 		"contracts/MasterGardener.sol": {
-			"keccak256": "0x7fe727d6b07ff3203c094068b273a38c52ee1bb035b3df6a578cb2b5b4ad1325",
+			"keccak256": "0x792044f1babcef178716390c9e21a03c673a31ac9fc5a91793d7e4743afd209a",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://c2e54c472609db2152955c268647b0ef0f9cd082a51b200c2192726caff00c72",
-				"dweb:/ipfs/QmTqVFaazSZp2VTHLaWWpd7yqDd6JE4TNCM7WgQV8QRAii"
+				"bzz-raw://e3594a6f59f3bd7f59e181bf18d30bd6e9918ba8851cbaf192d49abea060050a",
+				"dweb:/ipfs/QmT2bC6iwUbCR4RJNYvBuxKXYiWNkDDrmnWXPMoXPXZWL1"
 			]
 		}
 	},

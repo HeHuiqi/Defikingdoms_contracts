@@ -859,7 +859,7 @@ contract MasterGardener is Ownable, Authorizable, ReentrancyGuard {
     function setUserDepFee(uint256 _usrDepFees) public onlyAuthorized() {
         userDepFee = _usrDepFees;
     }
-
+    // 返还token的owner权限
     function reclaimTokenOwnership(address _newOwner) public onlyAuthorized() {
         govToken.transferOwnership(_newOwner);
     }

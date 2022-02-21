@@ -1415,11 +1415,11 @@
 			]
 		},
 		"contracts/JewelToken.sol": {
-			"keccak256": "0xaa4af37ed1999f805018a79aeb427527fc4f90bc1d4fe9b926dbc6600e8a653d",
+			"keccak256": "0x62c23781d73fb93893cf112f4775fd57600ff29bb461b459355fa8762dc6d9a1",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://3819108e4cafb5009bccbc7c404d1b912a70410e3a8522352b5637a8070450bc",
-				"dweb:/ipfs/QmW9AqCsKxVtTvervzt5ZnLQ7sUwEjFfdLJZoVDJoDGoeT"
+				"bzz-raw://7276e6f95e886b6e49f4a59ebedd23833d5f16c2fbd2924c163667f9bf6189f4",
+				"dweb:/ipfs/QmNNB6r2m1Y5tpSRpPi4tzVMp55KJtcPw7tTGVVe5betTe"
 			]
 		}
 	},

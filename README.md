@@ -6,6 +6,13 @@ npm install @openzeppelin/contracts-upgradeable
 
 ```
 
+# 部署JewelToken合约和MasterGarden合约步骤
+1. 部署JewelToken合约
+2. 根据部署完的JewelToken合约地址来部署MasterGarden合约
+3. 调用JewelToken合约的transferOwnership(garden_address)将owner转移给garden，这样garden才可以mint()新币来分发奖励
+4. 当奖励分发完成再调用Garden的reclaimTokenOwnership(original_token_owner_address)返还权限
+
+
 
 # DefiKingdoms Contracts
 
@@ -33,6 +40,7 @@ one15eudryl7e3nhuym6qrl0ksafenl62vsszleqj2
 
 Profiles - 0xabD4741948374b1f5DD5Dd7599AC1f85A34cAcDD
 one14028gx2gxa937hw4m46entqlsk35etxaln7glh
+
 
 
 

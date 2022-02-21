@@ -195,6 +195,7 @@ contract JewelToken is ERC20, Ownable, Authorizable {
      * - `recipient` cannot be the zero address.
      * - `sender` must have a balance of at least `amount`.
      */
+     /*
     function _transfer(
         address sender,
         address recipient,
@@ -202,6 +203,17 @@ contract JewelToken is ERC20, Ownable, Authorizable {
     ) internal virtual override
     antiWhale(sender, recipient, amount)
     onlyProfile(sender, recipient) {
+        super._transfer(sender, recipient, amount);
+        _moveDelegates(_delegates[sender], _delegates[recipient], amount);
+    }
+    */
+
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal virtual override
+    antiWhale(sender, recipient, amount) {
         super._transfer(sender, recipient, amount);
         _moveDelegates(_delegates[sender], _delegates[recipient], amount);
     }
@@ -350,9 +362,11 @@ contract JewelToken is ERC20, Ownable, Authorizable {
     }
 
     /// @notice A record of votes checkpoints for each account, by index
+    // 每个帐户的投票检查点记录，按索引
     mapping(address => mapping(uint32 => Checkpoint)) public checkpoints;
 
     /// @notice The number of checkpoints for each account
+    // 每个帐户的检查点数
     mapping(address => uint32) public numCheckpoints;
 
     /// @notice The EIP-712 typehash for the contract's domain
